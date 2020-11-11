@@ -31,6 +31,25 @@ import 'codemirror/mode/javascript/javascript';
 import 'codemirror/mode/css/css';
 import 'codemirror/mode/htmlmixed/htmlmixed';
 
+import 'codemirror/addon/fold/foldcode.js';
+import 'codemirror/addon/fold/foldgutter.css';
+import 'codemirror/addon/fold/foldgutter.js';
+import 'codemirror/addon/fold/brace-fold.js';
+import 'codemirror/addon/fold/xml-fold.js';
+import 'codemirror/addon/fold/indent-fold.js';
+import 'codemirror/addon/fold/markdown-fold.js';
+import 'codemirror/addon/fold/comment-fold.js';
+
+import 'codemirror/addon/edit/closebrackets.js';
+import 'codemirror/addon/edit/closetag.js';
+import 'codemirror/keymap/sublime.js';
+
+import 'codemirror/addon/hint/show-hint.css';
+import 'codemirror/addon/hint/show-hint.js';
+import 'codemirror/addon/hint/css-hint.js';
+import 'codemirror/addon/hint/html-hint.js';
+import 'codemirror/addon/hint/javascript-hint.js';
+
 export default {
   name: 'Home',
   data:function (){
@@ -42,6 +61,11 @@ export default {
         tabSize: 2,
         mode: 'htmlmixed',
         theme: 'material',
+        foldGutter: true,
+        gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+        autoCloseTags: true,
+        autoCloseBrackets: true,
+        extraKeys: {"Ctrl-Q": function(cm){ cm.foldCode(cm.getCursor()); }},
       },
       csseditor:'',
       cssoptions:{
@@ -50,22 +74,35 @@ export default {
         tabSize: 2,
         mode: 'css',
         theme: 'material',
+        foldGutter: true,
+        gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+        autoCloseBrackets: true,
+        extraKeys: {"Ctrl-Q": function(cm){ cm.foldCode(cm.getCursor()); }},
+
       },
       jseditor:'',
       jsoptions:{
         lineNumbers: true,
         line: true,
         tabSize: 2,
-        mode: 'javascript',
+        mode: {name: "javascript", globalVars: true},
         theme: 'material',
+        foldGutter: true,
+        gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+        autoCloseBrackets: true,
+        extraKeys: {"Ctrl-Q": function(cm){ cm.foldCode(cm.getCursor()) },"Ctrl-W": "autocomplete"},
+        keyMap: "sublime",
       },
     }
   },
   methods:{
     initeditor(){
       this.htmleditor = codemirror.fromTextArea(this.$refs.htmleditor, this.htmloptions);
+      this.htmleditor.foldCode(codemirror.Pos(0, 0));
       this.csseditor = codemirror.fromTextArea(this.$refs.csseditor, this.cssoptions);
+      this.csseditor.foldCode(codemirror.Pos(0, 0));
       this.jseditor = codemirror.fromTextArea(this.$refs.jseditor, this.jsoptions);
+      this.jseditor.foldCode(codemirror.Pos(0, 0));
     }
   },
   mounted(){
