@@ -50,6 +50,9 @@ import 'codemirror/addon/hint/css-hint.js';
 import 'codemirror/addon/hint/html-hint.js';
 import 'codemirror/addon/hint/javascript-hint.js';
 
+import emmet from '@emmetio/codemirror-plugin';
+emmet(codemirror);
+
 export default {
   name: 'Home',
   data:function (){
@@ -65,7 +68,13 @@ export default {
         gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
         autoCloseTags: true,
         autoCloseBrackets: true,
-        extraKeys: {"Ctrl-Q": function(cm){ cm.foldCode(cm.getCursor()); }},
+        
+        extraKeys: {
+        "Ctrl-Q": function(cm){ cm.foldCode(cm.getCursor()); },
+        'Tab': 'emmetExpandAbbreviation',
+        'Esc': 'emmetResetAbbreviation',
+        'Enter': 'emmetInsertLineBreak'
+        }
       },
       csseditor:'',
       cssoptions:{
@@ -77,7 +86,13 @@ export default {
         foldGutter: true,
         gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
         autoCloseBrackets: true,
-        extraKeys: {"Ctrl-Q": function(cm){ cm.foldCode(cm.getCursor()); }},
+        
+        extraKeys: {
+        "Ctrl-Q": function(cm){ cm.foldCode(cm.getCursor()); },
+        'Tab': 'emmetExpandAbbreviation',
+        'Esc': 'emmetResetAbbreviation',
+        'Enter': 'emmetInsertLineBreak'
+        }
 
       },
       jseditor:'',
