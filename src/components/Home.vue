@@ -53,6 +53,8 @@ import 'codemirror/addon/hint/javascript-hint.js';
 import emmet from '@emmetio/codemirror-plugin';
 emmet(codemirror);
 
+import _ from 'lodash';
+
 export default {
   name: 'Home',
   data:function (){
@@ -108,16 +110,71 @@ export default {
         extraKeys: {"Ctrl-Q": function(cm){ cm.foldCode(cm.getCursor()) },"Ctrl-W": "autocomplete"},
         keyMap: "sublime",
       },
+
+      htmlcontent:'',
+      csscontent:'',
+      jscontent:'',
     }
   },
   methods:{
     initeditor(){
       this.htmleditor = codemirror.fromTextArea(this.$refs.htmleditor, this.htmloptions);
       this.htmleditor.foldCode(codemirror.Pos(0, 0));
+
+      this.htmleditor.on('change',_.debounce((editor) =>{
+        this.htmlcontent = editor.getValue();
+        console.log('html',this.htmlcontent);
+        this.renderCode()
+      },3000));
+
+
       this.csseditor = codemirror.fromTextArea(this.$refs.csseditor, this.cssoptions);
       this.csseditor.foldCode(codemirror.Pos(0, 0));
+      this.csseditor.on('change',_.debounce((editor) =>{
+        this.csscontent = editor.getValue();
+        this.renderCode()
+      },3000));
+
       this.jseditor = codemirror.fromTextArea(this.$refs.jseditor, this.jsoptions);
       this.jseditor.foldCode(codemirror.Pos(0, 0));
+      this.jseditor.on('change',_.debounce((editor) =>{
+        this.jscontent = editor.getValue();
+        this.renderCode()
+      },3000));
+    },
+    renderCode(){
+      var html;
+
+      if(this.jscontent != ''){
+        html = this.htmlcontent + this.jscontent;
+      }else{
+        html = this.htmlcontent;
+      } 
+      let css = this.csscontent;
+      const iframe = this.$refs.iframe;
+      console.log('iframe',this.jscontent,html);
+      const document = iframe.contentDocument;
+      const documentContents = `
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <meta http-equiv="X-UA-Compatible" content="ie=edge">
+            <title>Document</title>
+            <style>
+              ${css}
+            </style>
+          </head>
+          <body>
+            ${html}
+          </body>
+          </html>
+        `;
+
+      document.open();
+      document.write(documentContents);
+      document.close();
     }
   },
   mounted(){
