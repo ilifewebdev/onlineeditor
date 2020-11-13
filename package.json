@@ -12,6 +12,7 @@
     "codemirror": "^5.58.2",
     "core-js": "^3.6.5",
     "loadash": "^1.0.0",
+    "pug": "^3.0.0",
     "vue": "^2.6.11"
   },
   "devDependencies": {

@@ -2,7 +2,14 @@
 <div class="editorwrap">
     <div class="left">
       <div class="editor">
-        <div class="editorheader">HTML</div>
+        <div class="editorheader">
+          <span>HTML</span>
+          <label for="htmlmode">Mode</label>
+          <select v-model="htmlmode">
+            <option value="htmlmixed">htmlmixed</option>
+            <option value="pug">pug</option>
+          </select>
+        </div>
          <textarea ref="htmleditor"></textarea>
       </div>
       <div class="editor">
@@ -30,6 +37,7 @@ import 'codemirror/theme/material.css';
 import 'codemirror/mode/javascript/javascript';
 import 'codemirror/mode/css/css';
 import 'codemirror/mode/htmlmixed/htmlmixed';
+import 'codemirror/mode/pug/pug';
 
 import 'codemirror/addon/fold/foldcode.js';
 import 'codemirror/addon/fold/foldgutter.css';
@@ -54,6 +62,7 @@ import emmet from '@emmetio/codemirror-plugin';
 emmet(codemirror);
 
 import _ from 'lodash';
+const pug = require('pug');
 
 export default {
   name: 'Home',
@@ -64,7 +73,7 @@ export default {
         lineNumbers: true,
         line: true,
         tabSize: 2,
-        mode: 'htmlmixed',
+        
         theme: 'material',
         foldGutter: true,
         gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
@@ -78,6 +87,8 @@ export default {
         'Enter': 'emmetInsertLineBreak'
         }
       },
+      htmlmode:'htmlmixed',
+
       csseditor:'',
       cssoptions:{
         lineNumbers: true,
@@ -116,25 +127,26 @@ export default {
       jscontent:'',
     }
   },
+  watch:{
+    htmlmode() {
+      console.log('update',this.htmlmode);
+      this.htmleditor.setOption("mode", this.htmlmode);
+    }
+  },
   methods:{
     initeditor(){
-      this.htmleditor = codemirror.fromTextArea(this.$refs.htmleditor, this.htmloptions);
+      this.htmleditor = codemirror.fromTextArea(this.$refs.htmleditor, Object.assign(this.htmloptions, {mode: this.htmlmode}));
       this.htmleditor.foldCode(codemirror.Pos(0, 0));
-
       this.htmleditor.on('change',_.debounce((editor) =>{
         this.htmlcontent = editor.getValue();
-        console.log('html',this.htmlcontent);
-        this.renderCode()
+        this.renderCode();
       },3000));
-
-
       this.csseditor = codemirror.fromTextArea(this.$refs.csseditor, this.cssoptions);
       this.csseditor.foldCode(codemirror.Pos(0, 0));
       this.csseditor.on('change',_.debounce((editor) =>{
         this.csscontent = editor.getValue();
         this.renderCode()
       },3000));
-
       this.jseditor = codemirror.fromTextArea(this.$refs.jseditor, this.jsoptions);
       this.jseditor.foldCode(codemirror.Pos(0, 0));
       this.jseditor.on('change',_.debounce((editor) =>{
@@ -142,13 +154,19 @@ export default {
         this.renderCode()
       },3000));
     },
+    compilehtml(){
+      if(this.htmlmode == 'pug'){
+        return pug.render(this.htmlcontent);
+      }else{
+        return this.htmlcontent;
+      }
+    },
     renderCode(){
       var html;
-
       if(this.jscontent != ''){
-        html = this.htmlcontent + this.jscontent;
+        html = this.compilehtml(this.htmlcontent) + this.jscontent;
       }else{
-        html = this.htmlcontent;
+        html = this.compilehtml(this.htmlcontent);
       } 
       let css = this.csscontent;
       const iframe = this.$refs.iframe;
@@ -212,6 +230,10 @@ export default {
   .iframe{
     width: 100%;
     height: 100%;
+  }
+  span{
+    display: inline-block;
+    margin-right: 10px;
   }
 }
 
