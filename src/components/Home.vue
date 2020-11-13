@@ -13,7 +13,15 @@
          <textarea ref="htmleditor"></textarea>
       </div>
       <div class="editor">
-        <div class="editorheader">CSS</div>
+        <div class="editorheader">
+          <span>CSS</span>
+          <label for="cssmode">Mode</label>
+          <select v-model="cssmode">
+            <option value="css">css</option>
+            <option value="sass">sass</option>
+          </select>
+          <button @click="runcss()">运行</button>
+        </div>
          <textarea ref="csseditor"></textarea>
       </div>
       <div class="editor">
@@ -36,6 +44,7 @@ import codemirror from "codemirror";
 import 'codemirror/theme/material.css';
 import 'codemirror/mode/javascript/javascript';
 import 'codemirror/mode/css/css';
+import 'codemirror/mode/sass/sass';
 import 'codemirror/mode/htmlmixed/htmlmixed';
 import 'codemirror/mode/pug/pug';
 
@@ -62,7 +71,10 @@ import emmet from '@emmetio/codemirror-plugin';
 emmet(codemirror);
 
 import _ from 'lodash';
+
 const pug = require('pug');
+// const sass = require('sass');
+import axios from 'axios';
 
 export default {
   name: 'Home',
@@ -94,7 +106,6 @@ export default {
         lineNumbers: true,
         line: true,
         tabSize: 2,
-        mode: 'css',
         theme: 'material',
         foldGutter: true,
         gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
@@ -106,14 +117,15 @@ export default {
         'Esc': 'emmetResetAbbreviation',
         'Enter': 'emmetInsertLineBreak'
         }
-
       },
+      cssmode:'css',
+
       jseditor:'',
       jsoptions:{
         lineNumbers: true,
         line: true,
         tabSize: 2,
-        mode: {name: "javascript", globalVars: true},
+        mode: "javascript",
         theme: 'material',
         foldGutter: true,
         gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
@@ -129,9 +141,11 @@ export default {
   },
   watch:{
     htmlmode() {
-      console.log('update',this.htmlmode);
       this.htmleditor.setOption("mode", this.htmlmode);
-    }
+    },
+    cssmode() {
+      this.csseditor.setOption("mode", this.cssmode);
+    },
   },
   methods:{
     initeditor(){
@@ -141,12 +155,18 @@ export default {
         this.htmlcontent = editor.getValue();
         this.renderCode();
       },3000));
-      this.csseditor = codemirror.fromTextArea(this.$refs.csseditor, this.cssoptions);
+
+      console.log('css',Object.assign(this.cssoptions, {mode: this.cssmode}));
+      this.csseditor = codemirror.fromTextArea(this.$refs.csseditor,Object.assign(this.cssoptions, {mode: this.cssmode}));
       this.csseditor.foldCode(codemirror.Pos(0, 0));
       this.csseditor.on('change',_.debounce((editor) =>{
         this.csscontent = editor.getValue();
-        this.renderCode()
+        if(this.cssmode == 'css'){
+          this.renderCode()
+        }
+        
       },3000));
+
       this.jseditor = codemirror.fromTextArea(this.$refs.jseditor, this.jsoptions);
       this.jseditor.foldCode(codemirror.Pos(0, 0));
       this.jseditor.on('change',_.debounce((editor) =>{
@@ -160,6 +180,21 @@ export default {
       }else{
         return this.htmlcontent;
       }
+    },
+   
+    runcss(){
+      axios.post('/api/scss', {
+      scss: this.csscontent,
+      })
+      .then((res) => {
+        
+        this.csscontent = res.data;
+        console.log('res',this.csscontent);
+        this.renderCode();
+      })
+      .catch((err)=> {
+        console.log(err);
+      });
     },
     renderCode(){
       var html;

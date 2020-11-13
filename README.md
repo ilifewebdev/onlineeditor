@@ -1,4 +1,4 @@
-# onlineeditor
+# editor1
 
 ## Project setup
 ```
