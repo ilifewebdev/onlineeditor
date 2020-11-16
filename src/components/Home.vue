@@ -25,7 +25,15 @@
          <textarea ref="csseditor"></textarea>
       </div>
       <div class="editor">
-        <div class="editorheader">JavaScript</div>
+        <div class="editorheader">
+          <span>Javascript</span>
+          <label for="jsmode">Mode</label>
+          <select v-model="jsmode">
+            <option value="javascript">javascript</option>
+            <option value="coffeescript">coffeescript</option>
+          </select>
+          <button @click="runjs()">运行</button>
+        </div>
          <textarea ref="jseditor"></textarea>
       </div>
     </div>
@@ -43,6 +51,8 @@ import codemirror from "codemirror";
 
 import 'codemirror/theme/material.css';
 import 'codemirror/mode/javascript/javascript';
+import 'codemirror/mode/coffeescript/coffeescript';
+
 import 'codemirror/mode/css/css';
 import 'codemirror/mode/sass/sass';
 import 'codemirror/mode/htmlmixed/htmlmixed';
@@ -125,7 +135,7 @@ export default {
         lineNumbers: true,
         line: true,
         tabSize: 2,
-        mode: "javascript",
+      
         theme: 'material',
         foldGutter: true,
         gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
@@ -133,6 +143,7 @@ export default {
         extraKeys: {"Ctrl-Q": function(cm){ cm.foldCode(cm.getCursor()) },"Ctrl-W": "autocomplete"},
         keyMap: "sublime",
       },
+      jsmode:'javascript',
 
       htmlcontent:'',
       csscontent:'',
@@ -146,6 +157,9 @@ export default {
     cssmode() {
       this.csseditor.setOption("mode", this.cssmode);
     },
+    jsmode() {
+      this.jseditor.setOption("mode", this.jsmode);
+    },
   },
   methods:{
     initeditor(){
@@ -154,7 +168,7 @@ export default {
       this.htmleditor.on('change',_.debounce((editor) =>{
         this.htmlcontent = editor.getValue();
         this.renderCode();
-      },3000));
+      },1000));
 
       console.log('css',Object.assign(this.cssoptions, {mode: this.cssmode}));
       this.csseditor = codemirror.fromTextArea(this.$refs.csseditor,Object.assign(this.cssoptions, {mode: this.cssmode}));
@@ -165,14 +179,16 @@ export default {
           this.renderCode()
         }
         
-      },3000));
+      },1000));
 
-      this.jseditor = codemirror.fromTextArea(this.$refs.jseditor, this.jsoptions);
+      this.jseditor = codemirror.fromTextArea(this.$refs.jseditor,Object.assign(this.jsoptions, {mode: this.jsmode}));
       this.jseditor.foldCode(codemirror.Pos(0, 0));
       this.jseditor.on('change',_.debounce((editor) =>{
         this.jscontent = editor.getValue();
-        this.renderCode()
-      },3000));
+        if(this.jsmode == 'javascript'){
+          this.renderCode()
+        }
+      },1000));
     },
     compilehtml(){
       if(this.htmlmode == 'pug'){
@@ -187,15 +203,27 @@ export default {
       scss: this.csscontent,
       })
       .then((res) => {
-        
         this.csscontent = res.data;
-        console.log('res',this.csscontent);
         this.renderCode();
       })
       .catch((err)=> {
         console.log(err);
       });
     },
+    runjs(){
+      axios.post('/api/js', {
+      js: this.jscontent,
+      })
+      .then((res) => {
+        this.jscontent= res.data;
+        console.log('js',this.jscontent);
+        this.renderCode();
+      })
+      .catch((err)=> {
+        console.log(err);
+      });
+    },
+
     renderCode(){
       var html;
       if(this.jscontent != ''){
